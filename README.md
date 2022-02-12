@@ -1,4 +1,4 @@
-# lazscript | LAZADA _ID
+# lazscript | LAZADA-ID
 
 ## Uage
 * [chalk](chalk#readme)
