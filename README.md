@@ -13,5 +13,5 @@ npm install wrap-ansi
 ## Uage
 * [chalk]chalk
 * [ansi-styles]ansi-styles
-* [wrap-ansi]wrap-ansi
+* [wrap-ansi](wrap-ansi#readme)
 
