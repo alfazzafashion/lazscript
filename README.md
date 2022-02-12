@@ -1,17 +1,6 @@
-# lazscript
-
-```sh
-npm install chalk
-```
-```
-npm install ansi-styles
-```
-```
-npm install wrap-ansi
-```
+# lazscript | LAZADA _ID
 
 ## Uage
-* [chalk]chalk
-* [ansi-styles]ansi-styles
+* [chalk](chalk#readme)
+* [ansi-styles](ansi-styles#readme)
 * [wrap-ansi](wrap-ansi#readme)
-
