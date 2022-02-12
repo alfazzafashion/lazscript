@@ -1,0 +1,35 @@
+{
+  "name": "@stiligita/dom-elements",
+  "version": "1.0.0-0",
+  "main": "lib/index.js",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "babel": "babel src --out-dir lib --copy-files",
+    "babel:watch": "babel src --out-dir lib --copy-files -w -s",
+    "test": "bundlesize"
+  },
+  "bundlesize": [
+    {
+      "path": "./lib/*elements.js",
+      "maxSize": "1 kB"
+    },
+    {
+      "path": "./lib/*attributes.js",
+      "maxSize": "2 kB"
+    }
+  ],
+  "dependencies": {
+    "@stiligita/utils": "^1.0.0-0"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.0",
+    "babel-loader": "^7.1.2",
+    "babel-preset-env": "^1.6.1",
+    "babel-preset-stage-2": "^6.24.1",
+    "bundlesize": "^0.15.3",
+    "cross-env": "^5.1.1"
+  }
+}

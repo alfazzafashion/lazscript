@@ -1,0 +1,34 @@
+{
+  "name": "terminal-default-colors",
+  "version": "1.0.2",
+  "description": "Default terminal colors for a variety of terminal emulators",
+  "main": "index.js",
+  "files": [
+    "index.js",
+    "index.json"
+  ],
+  "scripts": {
+    "scrape": "node build.js"
+  },
+  "author": "Mario Nebl <hello@mario-nebl.de>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/marionebl/default-styles/issues"
+  },
+  "homepage": "https://github.com/marionebl/default-styles#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/marionebl/default-styles.git"
+  },
+  "keywords": [
+    "color",
+    "ansi",
+    "terminal"
+  ],
+  "devDependencies": {
+    "@marionebl/sander": "^0.6.1",
+    "cheerio": "^1.0.0-rc.2",
+    "lodash.camelcase": "^4.3.0",
+    "node-fetch": "^1.7.3"
+  }
+}

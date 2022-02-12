@@ -1,0 +1,1 @@
+{"version":3,"sources":["../src/index.js"],"names":["DOM","render"],"mappings":";;;;;;;AAAA;;;;;;AAEA,IAAMA,MAAM;AACVC;AADU,CAAZ;;QAIQA,M;kBACOD,G","file":"index.js","sourcesContent":["import render from './render'\n\nconst DOM = {\n  render\n}\n\nexport {render}\nexport default DOM\n"]}

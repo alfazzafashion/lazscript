@@ -1,0 +1,409 @@
+#!/usr/bin/env node
+"use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const fs = require("fs");
+const chalk_1 = require("chalk");
+const execa = require("execa");
+const guess_terminal_1 = require("guess-terminal");
+const macosAppConfig = require("macos-app-config");
+const os = require("os");
+const path = require("path");
+const tempy = require("tempy");
+const parsers = require("term-schemes");
+const commandExists = require("command-exists");
+const meow = require("meow");
+const plist = require("plist");
+const fetch = require("node-fetch");
+const getStdin = require("get-stdin");
+const { render } = require("svg-term");
+const sander = require("@marionebl/sander");
+const SVGO = require("svgo");
+withCli(main, `
+  Usage
+    $ svg-term [options]
+
+  Options
+    --at            timestamp of frame to render in ms [number]
+    --cast          asciinema cast id to download [string], required if no stdin provided [string]
+    --command       command to record [string]
+    --from          lower range of timeline to render in ms [number]
+    --height        height in lines [number]
+    --help          print this help [boolean]
+    --in            json file to use as input [string]
+    --no-cursor     disable cursor rendering [boolean]
+    --no-optimize   disable svgo optimization [boolean]
+    --out           output file, emits to stdout if omitted, [string]
+    --padding       distance between text and image bounds, [number]
+    --padding-x     distance between text and image bounds on x axis [number]
+    --padding-y     distance between text and image bounds on y axis [number]
+    --profile       terminal profile file to use, requires --term [string]
+    --term          terminal profile format [iterm2, xrdb, xresources, terminator, konsole, terminal, remmina, termite, tilda, xcfe], requires --profile [string]
+    --to            upper range of timeline to render in ms [number]
+    --width         width in columns [number]
+    --window        render with window decorations [boolean]
+
+  Examples
+    $ cat rec.json | svg-term
+    $ svg-term --cast 113643
+    $ svg-term --cast 113643 --out examples/parrot.svg
+`, {
+    boolean: ['cursor', 'help', 'optimize', 'version', 'window'],
+    string: ['at', 'cast', 'command', 'from', 'height', 'in', 'out', 'padding', 'padding-x', 'padding-y', 'profile', 'term', 'to', 'width'],
+    default: {
+        cursor: true,
+        optimize: true,
+        window: false
+    }
+});
+function main(cli) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const error = cliError(cli);
+        if ('command' in cli.flags && !(yield command('asciinema'))) {
+            throw error([
+                `svg-term: asciinema must be installed when --command is specified.`,
+                ` See instructions at: https://asciinema.org/docs/installation`
+            ].join('\n'));
+        }
+        const input = yield getInput(cli);
+        if (!input) {
+            throw error(`svg-term: either stdin, --cast, --command or --in are required`);
+        }
+        const malformed = ensure(["height", "width"], cli.flags, (name, val) => {
+            if (!(name in cli.flags)) {
+                return null;
+            }
+            const candidate = parseInt(val, 10);
+            if (isNaN(candidate)) {
+                return new TypeError(`${name} expected to be number, received "${val}"`);
+            }
+            return null;
+        });
+        if (malformed.length > 0) {
+            throw error(`svg-term: ${malformed.map(m => m.message).join("\n")}`);
+        }
+        const missingValue = ensure(["cast", "out", "profile"], cli.flags, (name, val) => {
+            if (!(name in cli.flags)) {
+                return null;
+            }
+            if (name === "cast" && typeof val === "number") {
+                return null;
+            }
+            if (typeof val === "string") {
+                return null;
+            }
+            return new TypeError(`${name} expected to be string, received "${val}"`);
+        });
+        if (missingValue.length > 0) {
+            throw error(`svg-term: ${missingValue.map(m => m.message).join("\n")}`);
+        }
+        const shadowed = ensure(["at", "from", "to"], cli.flags, (name, val) => {
+            if (!(name in cli.flags)) {
+                return null;
+            }
+            const v = typeof (val) === "number" ? val : parseInt(val, 10);
+            if (isNaN(v)) {
+                return new TypeError(`${name} expected to be number, received "${val}"`);
+            }
+            if (name !== "at" && !isNaN(parseInt(cli.flags.at, 10))) {
+                return new TypeError(`--at flag disallows --${name}`);
+            }
+            return null;
+        });
+        if (shadowed.length > 0) {
+            throw error(`svg-term: ${shadowed.map(m => m.message).join("\n")}`);
+        }
+        const term = 'term' in cli.flags ? cli.flags.term : guess_terminal_1.guessTerminal();
+        const profile = 'profile' in cli.flags ? cli.flags.profile : guessProfile(term);
+        const guess = {
+            term,
+            profile
+        };
+        if ("term" in cli.flags || "profile" in cli.flags) {
+            const unsatisfied = ["term", "profile"].filter(n => !Boolean(guess[n]));
+            if (unsatisfied.length > 0 && term !== "hyper") {
+                throw error(`svg-term: --term and --profile must be used together, ${unsatisfied.join(", ")} missing`);
+            }
+        }
+        const unknown = ensure(["term"], cli.flags, (name, val) => {
+            if (!(name in cli.flags)) {
+                return null;
+            }
+            if ((cli.flags.term in parsers.TermSchemes)) {
+                return null;
+            }
+            return new TypeError(`${name} expected to be one of ${Object.keys(parsers.TermSchemes).join(", ")}, received "${val}"`);
+        });
+        if (unknown.length > 0) {
+            throw error(`svg-term: ${unknown.map(m => m.message).join("\n")}`);
+        }
+        const p = guess.profile || "";
+        const isFileProfile = ["~", "/", "."].indexOf(p.charAt(0)) > -1;
+        if (isFileProfile && "profile" in cli.flags) {
+            const missing = !(yield fileExists(cli.flags.profile));
+            if (missing) {
+                throw error(`svg-term: ${cli.flags.profile} must be readable file but was not found`);
+            }
+        }
+        const theme = getTheme(guess);
+        const svg = render(input, {
+            at: toNumber(cli.flags.at),
+            cursor: toBoolean(cli.flags.cursor, true),
+            from: toNumber(cli.flags.from),
+            paddingX: toNumber(cli.flags.paddingX || cli.flags.padding),
+            paddingY: toNumber(cli.flags.paddingY || cli.flags.padding),
+            to: toNumber(cli.flags.to),
+            height: toNumber(cli.flags.height),
+            theme,
+            width: toNumber(cli.flags.width),
+            window: toBoolean(cli.flags.window, false)
+        });
+        const svgo = new SVGO({
+            plugins: [{ collapseGroups: false }]
+        });
+        const optimized = toBoolean(cli.flags.optimize, true)
+            ? yield svgo.optimize(svg)
+            : { data: svg };
+        if (typeof cli.flags.out === "string") {
+            sander.writeFile(cli.flags.out, Buffer.from(optimized.data));
+        }
+        else {
+            process.stdout.write(optimized.data);
+        }
+    });
+}
+function command(name) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            return (yield commandExists(name)) === name;
+        }
+        catch (err) {
+            return false;
+        }
+    });
+}
+function ensure(names, flags, predicate) {
+    return names
+        .map(name => predicate(name, flags[name]))
+        .filter(e => e instanceof Error)
+        .map(e => e);
+}
+function fileExists(...args) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            yield sander.open(...args, 'r');
+            return true;
+        }
+        catch (err) {
+            return false;
+        }
+    });
+}
+function cliError(cli) {
+    return message => {
+        const err = new Error(message);
+        err.help = () => cli.help;
+        return err;
+    };
+}
+function getConfig(term) {
+    switch (term) {
+        case guess_terminal_1.GuessedTerminal.terminal: {
+            return macosAppConfig.sync(term)[0];
+        }
+        case guess_terminal_1.GuessedTerminal.iterm2: {
+            return macosAppConfig.sync(term)[0];
+        }
+        default:
+            return null;
+    }
+}
+function getPresets(term) {
+    const config = getConfig(term);
+    switch (term) {
+        case guess_terminal_1.GuessedTerminal.terminal: {
+            return config["Window Settings"];
+        }
+        case guess_terminal_1.GuessedTerminal.iterm2: {
+            return config["Custom Color Presets"];
+        }
+        default:
+            return null;
+    }
+}
+function guessProfile(term) {
+    if (os.platform() !== "darwin") {
+        return null;
+    }
+    const config = getConfig(term);
+    if (!config) {
+        return null;
+    }
+    switch (term) {
+        case guess_terminal_1.GuessedTerminal.terminal: {
+            return config["Default Window Settings"];
+        }
+        case guess_terminal_1.GuessedTerminal.iterm2: {
+            return null;
+        }
+        default:
+            return null;
+    }
+}
+function getInput(cli) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (cli.flags.command) {
+            return record(cli.flags.command);
+        }
+        if (cli.flags.in) {
+            return String(yield sander.readFile(cli.flags.in));
+        }
+        if (cli.flags.cast) {
+            const response = yield fetch(`https://asciinema.org/a/${cli.flags.cast}.cast?dl=true`);
+            return response.text();
+        }
+        return getStdin();
+    });
+}
+function getParser(term) {
+    switch (term) {
+        case parsers.TermSchemes.iterm2:
+            return parsers.iterm2;
+        case parsers.TermSchemes.konsole:
+            return parsers.konsole;
+        case parsers.TermSchemes.remmina:
+            return parsers.remmina;
+        case parsers.TermSchemes.terminal:
+            return parsers.terminal;
+        case parsers.TermSchemes.terminator:
+            return parsers.terminator;
+        case parsers.TermSchemes.termite:
+            return parsers.termite;
+        case parsers.TermSchemes.tilda:
+            return parsers.tilda;
+        case parsers.TermSchemes.xcfe:
+            return parsers.xfce;
+        case parsers.TermSchemes.xresources:
+            return parsers.xresources;
+        case parsers.TermSchemes.xterm:
+            return parsers.xterm;
+        default:
+            throw new Error(`unknown term parser: ${term}`);
+    }
+}
+function getTheme(guess) {
+    if (guess.term === null && guess.profile === null) {
+        return null;
+    }
+    const p = guess.profile || "";
+    const isFileProfile = ["~", "/", "."].indexOf(p.charAt(0)) > -1;
+    return isFileProfile
+        ? parseTheme(guess.term, guess.profile)
+        : extractTheme(guess.term, guess.profile);
+}
+function parseTheme(term, input) {
+    const parser = getParser(term);
+    return parser(String(fs.readFileSync(input)));
+}
+function extractTheme(term, name) {
+    if (!(term in guess_terminal_1.GuessedTerminal)) {
+        return null;
+    }
+    if (os.platform() !== "darwin") {
+        return null;
+    }
+    if (term === guess_terminal_1.GuessedTerminal.hyper) {
+        const filename = path.resolve(os.homedir(), ".hyper.js");
+        return parsers.hyper(String(fs.readFileSync(filename)), {
+            filename
+        });
+    }
+    const presets = getPresets(term);
+    if (!presets) {
+        return null;
+    }
+    if (!(name in presets)) {
+        throw new Error(`profile "${name}" not found for terminal "${term}". Available: ${Object.keys(presets).join(', ')}`);
+    }
+    const theme = presets[name];
+    const parser = getParser(term);
+    if (!theme) {
+        return null;
+    }
+    switch (term) {
+        case guess_terminal_1.GuessedTerminal.iterm2: {
+            return parser(plist.build(theme));
+        }
+        case guess_terminal_1.GuessedTerminal.terminal:
+            return parser(plist.build(theme));
+        default:
+            return null;
+    }
+}
+function record(cmd, options = {}) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const tmp = tempy.file({ extension: '.json' });
+        const result = yield execa('asciinema', [
+            'rec',
+            '-c', cmd,
+            ...(options.title ? ['-t', options.title] : []),
+            tmp
+        ]);
+        if (result.code > 0) {
+            throw new Error(`recording "${cmd}" failed\n${result.stdout}\n${result.stderr}`);
+        }
+        return String(yield sander.readFile(tmp));
+    });
+}
+function toNumber(input) {
+    if (!input) {
+        return null;
+    }
+    const candidate = parseInt(input, 10);
+    if (isNaN(candidate)) {
+        return null;
+    }
+    return candidate;
+}
+function toBoolean(input, fb) {
+    if (input === undefined) {
+        return fb;
+    }
+    if (input === "false") {
+        return false;
+    }
+    if (input === "true") {
+        return true;
+    }
+    return input === true;
+}
+function withCli(fn, help = "", options = {}) {
+    const unknown = [];
+    const cli = meow(help, Object.assign({}, options, { unknown: (arg) => {
+            unknown.push(arg);
+            return false;
+        } }));
+    if (unknown.length > 0) {
+        console.log(cli.help);
+        console.log("\n", chalk_1.default.red(`svg-term: remove unknown flags ${unknown.join(', ')}`));
+        process.exit(1);
+    }
+    fn(cli).catch(err => {
+        console.log({ err });
+        setTimeout(() => {
+            if (typeof err.help === "function") {
+                console.log(err.help());
+                console.log("\n", chalk_1.default.red(err.message));
+                process.exit(1);
+            }
+            throw err;
+        }, 0);
+    });
+}

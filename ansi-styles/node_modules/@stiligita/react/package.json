@@ -1,0 +1,52 @@
+{
+  "name": "@stiligita/react",
+  "version": "1.0.0-0",
+  "main": "lib/index.js",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "babel": "babel src --out-dir lib --copy-files",
+    "babel:watch": "babel src --out-dir lib --copy-files -w -s",
+    "build": "webpack",
+    "watch": "webpack-dev-server",
+    "test": "bundlesize"
+  },
+  "bundlesize": [
+    {
+      "path": "./lib/*elements.js",
+      "maxSize": "2 kB"
+    },
+    {
+      "path": "./lib/*{attributes,index,utils}.js",
+      "maxSize": "1 kB"
+    }
+  ],
+  "dependencies": {
+    "@stiligita/constants": "^1.0.0-0",
+    "@stiligita/core": "^1.0.0-0",
+    "@stiligita/dom": "^1.0.0-0",
+    "@stiligita/hash-code": "^1.0.0-0",
+    "@stiligita/keyframes": "^1.0.0-0",
+    "@stiligita/store": "^1.0.0-0",
+    "@stiligita/stylesheets": "^1.0.0-0",
+    "@stiligita/templates": "^1.0.0-0",
+    "@stiligita/utils": "^1.0.0-0"
+  },
+  "devDependencies": {
+    "abcq": "^0.2.2",
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.0",
+    "babel-loader": "^7.1.2",
+    "babel-preset-env": "^1.6.1",
+    "babel-preset-react": "^6.24.1",
+    "babel-preset-stage-2": "^6.24.1",
+    "bundlesize": "^0.15.3",
+    "cross-env": "^5.1.1",
+    "react": "^16.2.0",
+    "react-dom": "^16.2.0",
+    "stylis": "^3.4.5",
+    "webpack": "^3.10.0",
+    "webpack-dev-server": "^2.9.5"
+  }
+}

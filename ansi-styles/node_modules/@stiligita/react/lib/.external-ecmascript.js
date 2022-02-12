@@ -1,0 +1,2 @@
+(function(global,factory){if("function"==typeof define&&define.amd)define([],factory);else if("undefined"!=typeof exports)factory();else{factory(),global.externalEcmascript={exports:{}}.exports}})(this,function(){"use strict"});
+//# sourceMappingURL=.external-ecmascript.js.map

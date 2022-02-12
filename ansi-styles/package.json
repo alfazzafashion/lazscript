@@ -50,5 +50,8 @@
 		"svg-term-cli": "^2.1.1",
 		"tsd": "^0.14.0",
 		"xo": "^0.38.2"
+	},
+	"dependencies": {
+		"ansi-styles": "^6.1.0"
 	}
 }

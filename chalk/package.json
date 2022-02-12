@@ -73,5 +73,9 @@
 		"exclude": [
 			"source/vendor"
 		]
+	},
+	"dependencies": {
+		"chalk": "^5.0.0",
+		"wrap-ansi": "^8.0.1"
 	}
 }

@@ -1,0 +1,57 @@
+{
+  "name": "guess-terminal",
+  "version": "1.0.0",
+  "description": "Guess the current terminal emulator",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "files": [
+    "lib/"
+  ],
+  "scripts": {
+    "prebuild": "npm run clean",
+    "build": "tsc",
+    "clean": "npx rimraf lib",
+    "format": "prettier src/**/*.ts --write && tslint --project . --fix",
+    "test": "jest"
+  },
+  "jest": {
+    "transform": {
+      "^.+\\.ts$": "ts-jest"
+    },
+    "testRegex": "(.*)\\.test\\.ts",
+    "moduleFileExtensions": [
+      "ts",
+      "js",
+      "json",
+      "node"
+    ]
+  },
+  "engines": {
+    "node": ">= 6"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/marionebl/guess-terminal.git"
+  },
+  "keywords": [
+    "terminal",
+    "emulator",
+    "detection"
+  ],
+  "author": "Mario Nebl <hello@mario-nebl.de>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/marionebl/guess-terminal/issues"
+  },
+  "homepage": "https://github.com/marionebl/guess-terminal#readme",
+  "devDependencies": {
+    "@types/jest": "^21.1.9",
+    "jest": "^22.0.4",
+    "jest-cli": "^22.0.4",
+    "prettier": "^1.9.2",
+    "ts-jest": "^22.0.0",
+    "tslint": "^5.7.0",
+    "tslint-config-prettier": "^1.6.0",
+    "typescript": "^2.6.2"
+  }
+}

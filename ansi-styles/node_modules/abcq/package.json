@@ -1,0 +1,45 @@
+{
+  "name": "abcq",
+  "version": "1.0.2",
+  "description": "",
+  "repository": "git@bitbucket.com:pixelass/abcq.git",
+  "main": "lib/src/index.js",
+  "types": "lib/src/index.d.ts",
+  "scripts": {
+    "build": "yarn clean:lib && tsc",
+    "clean:lib": "rimraf lib",
+    "format": "yarn run format:md; yarn run format:ts; yarn run format:js; yarn run format:json",
+    "format:json": "prettier *.json  --parser json --write",
+    "format:js": "prettier 'tests/**/*.js' --parser typescript --write",
+    "format:ts": "prettier 'src/**/*.ts' --parser typescript --write",
+    "format:md": "prettier *.md --parser markdown --write",
+    "lint": " yarn run lint:ts",
+    "lint:ts": "tslint-config-prettier-check ./tslint.json",
+    "precommit": "yarn test",
+    "prepublish": "yarn build",
+    "prepush": "yarn test",
+    "prerelease": "yarn test",
+    "pretest": "yarn build",
+    "posttest": "yarn lint",
+    "release": "standard-version --no-verify",
+    "test": "ava",
+    "watch": "yarn clean:lib && tsc --watch"
+  },
+  "keywords": [],
+  "author": "Gregor Adams <greg@pixelass.com> (http://pixelass.com)",
+  "license": "MIT",
+  "devDependencies": {
+    "ava": "^0.25.0",
+    "husky": "^1.0.0-rc.15",
+    "prettier": "^1.14.3",
+    "rimraf": "^2.6.2",
+    "standard-version": "^4.4.0",
+    "tslint": "^5.11.0",
+    "tslint-config-prettier": "^1.15.0",
+    "tslint-eslint-rules": "^5.4.0",
+    "typescript": "^3.0.3"
+  },
+  "dependencies": {
+    "tslib": "^1.9.3"
+  }
+}

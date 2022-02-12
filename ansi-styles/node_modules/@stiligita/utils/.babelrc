@@ -1,0 +1,19 @@
+{
+  "presets": ["stage-2", [
+    "env", {
+      "builtIns": false
+    }]
+  ],
+  "env": {
+    "production": {
+      "presets": [
+        ["minify",
+          {
+            "mangle": false,
+            "evaluate": false
+          }
+        ]
+      ]
+    }
+  }
+}
