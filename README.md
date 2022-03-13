@@ -2,9 +2,7 @@
 If you know how to fix an [issue](https://github.com/RendiFadilah/lazada-project/issues), consider opening a [pull](https://github.com/RendiFadilah/lazada-project/pulls) request for it.
 
 ## Install
- ~~~
 via npm or yarn
- ~~~
  
 ## Usage 
 
