@@ -20,3 +20,6 @@ via npm or yarn
     react-scripts build
  * eject
     react-scripts eject
+~~~
+
+If you know how to fix an [issue](https://github.com/RendiFadilah/lazada-project/issues), consider opening a [pull](https://github.com/RendiFadilah/lazada-project/pulls) request for it.
