@@ -3,22 +3,19 @@ If you know how to fix an [issue](https://github.com/RendiFadilah/lazada-project
 
 ## Install
  ~~~
- npm install
+via npm or yarn
  ~~~
  
 ## Usage 
 
-via npm or yarn
-~~~
 *Lifecycle scripts included in lazada-project@0.1.0:
  * start
     react-scripts start
  *  test
     react-scripts test
-
+    
 *available via `npm run-script`:
  * build
     react-scripts build
  * eject
     react-scripts eject
-~~~
