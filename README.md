@@ -1,4 +1,4 @@
-# lazada-project | LAZADA-ID
+# lazada-project
 
 # Install
  ~~~
